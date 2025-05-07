@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamPrep Pro | Competitive Exam Trainer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ===== Global Variables & Styles ===== */
+:root {
+    --bg-color: #f8fafc;
+    --text-color: #1e293b;
+    --primary-color: #4f46e5;
+    --secondary-color: #ffffff;
+    --correct-color: #10b981;
+    --incorrect-color: #ef4444;
+    --skip-color: #f59e0b;
+    --timer-warning: #f59e0b;
+    --timer-critical: #ef4444;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+[data-theme="dark"] {
+    --bg-color: #0f172a;
+    --text-color: #e2e8f0;
+    --primary-color: #6366f1;
+    --secondary-color: #1e293b;
+    --correct-color: #34d399;
+    --incorrect-color: #f87171;
+    --skip-color: #fbbf24;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    transition: var(--transition);
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* ===== Page Transition Animation ===== */
+.page {
+    position: absolute;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s, transform 0.5s;
+    pointer-events: none;
+}
+
+.page.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+/* ===== Common Components ===== */
+.btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card {
+    background-color: var(--secondary-color);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+}
+
+/* ===== Page 1: Welcome Screen ===== */
+#welcomePage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    text-align: center;
+}
+
+.welcome-logo {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+.welcome-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    max-width: 600px;
+}
+
+/* ===== Page 2: Configuration Screen ===== */
+#configPage .config-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.config-title {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.config-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* ===== Page 3: Quiz Screen ===== */
+#quizPage .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.quiz-info {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.quiz-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timer {
+    font-weight: 600;
+}
+
+.timer.warning {
+    color: var(--timer-warning);
+}
+
+.timer.critical {
+    color: var(--timer-critical);
+    animation: pulse 1s infinite;
+}
+
+.question-container {
+    margin-bottom: 2rem;
+}
+
+.question-text {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.option-btn {
+    padding: 1rem;
+    text-align: left;
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.option-btn:hover:not(:disabled) {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.option-btn.correct {
+    background-color: var(--correct-color);
+    border-color: var(--correct-color);
+    color: white;
+}
+
+.option-btn.incorrect {
+    background-color: var(--incorrect-color);
+    border-color: var(--incorrect-color);
+    color: white;
+}
+
+.quiz-controls {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-skip {
+    background-color: var(--skip-color);
+    color: white;
+}
+
+.btn-next {
+    background-color: var(--correct-color);
+    color: white;
+}
+
+/* ===== Page 4: Results Screen ===== */
+#resultsPage {
+    text-align: center;
+}
+
+.results-header {
+    margin-bottom: 2rem;
+}
+
+.results-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.score-display {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.performance-meter {
+    height: 10px;
+    background-color: var(--bg-color);
+    border-radius: 5px;
+    margin: 2rem 0;
+    overflow: hidden;
+}
+
+.meter-fill {
+    height: 100%;
+    background-color: var(--correct-color);
+    width: 0%;
+    transition: width 1s ease;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background-color: var(--bg-color);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.results-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* ===== Header Component ===== */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-actions {
+        flex-direction: column;
+    }
+    
+    .quiz-controls {
+        flex-direction: column-reverse;
+        gap: 1rem;
+    }
+}
+
+  </style>
+</head>
+<body>
+    <div class="container">
+        <!-- App Header (Visible on all pages except welcome) -->
+        <div class="app-header" id="appHeader">
+            <div class="logo">
+                <span class="logo-icon"><i class="fas fa-graduation-cap"></i></span>
+                <span>ExamPrep Pro</span>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+
+        <!-- Page 1: Welcome Screen -->
+        <div class="page active" id="welcomePage">
+            <div class="welcome-logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1 class="welcome-title">ExamPrep Pro</h1>
+            <p class="welcome-subtitle">
+                The ultimate preparation tool for competitive exams like IAS, NEET, LOK-SEWA and more. 
+                Test your knowledge, track your progress, and achieve your goals!
+            </p>
+            <button class="btn btn-primary" id="startBtn">
+                <i class="fas fa-play"></i> Get Started
+            </button>
+        </div>
+
+        <!-- Page 2: Configuration Screen -->
+        <div class="page" id="configPage">
+            <div class="card">
+                <div class="config-header">
+                    <h2 class="config-title">Test Configuration</h2>
+                    <p>Customize your exam settings</p>
+                </div>
+                
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="examType">Exam Type</label>
+                        <select class="form-control" id="examType">
+                            <option value="general">General Knowledge</option>
+                            <option value="ias">IAS Prelims</option>
+                            <option value="neet">NEET</option>
+                            <option value="loksewa">LOK SEWA</option>
+                            <option value="upsc">UPSC</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select class="form-control" id="category">
+                            <option value="9">General Knowledge</option>
+                            <option value="17">Science & Nature</option>
+                            <option value="18">Computers</option>
+                            <option value="22">Geography</option>
+                            <option value="23">History</option>
+                            <option value="24">Politics</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="difficulty">Difficulty Level</label>
+                        <select class="form-control" id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="questionCount">Number of Questions</label>
+                        <input type="number" class="form-control" id="questionCount" min="5" max="50" value="10">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timePerQuestion">Time per Question (seconds)</label>
+                        <input type="number" class="form-control" id="timePerQuestion" min="10" max="120" value="30">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="beginTestBtn">
+                        <i class="fas fa-hourglass-start"></i> Start Test
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 3: Quiz Screen -->
+        <div class="page" id="quizPage">
+            <div class="card">
+                <div class="quiz-header">
+                    <div class="quiz-info">
+                        <div class="quiz-info-item">
+                            <i class="fas fa-question-circle"></i>
+                            <span id="currentQuestionCount">1</span>/<span id="totalQuestions">10</span>
+                        </div>
+                        <div class="quiz-info-item">
+                            <i class="fas fa-star"></i>
+                            <span id="currentScore">0</span> pts
+                        </div>
+                    </div>
+                    <div class="timer" id="timer">
+                        <i class="fas fa-clock"></i>
+                        <span id="timeRemaining">30</span>s
+                    </div>
+                </div>
+                
+                <div class="question-container">
+                    <div class="question-text" id="questionText"></div>
+                    
+                    <div class="options-grid" id="optionsGrid">
+                        <!-- Options will be inserted here by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="quiz-controls">
+                    <button class="btn btn-skip" id="skipBtn">
+                        <i class="fas fa-forward"></i> Skip Question
+                    </button>
+                    <button class="btn btn-next" id="nextBtn" style="display: none;">
+                        <i class="fas fa-arrow-right"></i> Next Question
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 4: Results Screen -->
+        <div class="page" id="resultsPage">
+            <div class="card">
+                <div class="results-header">
+                    <div class="welcome-logo">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h2 class="results-title">Test Completed!</h2>
+                </div>
+                
+                <div class="score-display">
+                    <span id="finalScore">0</span>/<span id="maxScore">100</span>
+                </div>
+                
+                <div class="performance-meter">
+                    <div class="meter-fill" id="meterFill"></div>
+                </div>
+                
+                <p class="performance-text" id="performanceText"></p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="correctAnswers">0</div>
+                        <div class="stat-label">Correct</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="incorrectAnswers">0</div>
+                        <div class="stat-label">Incorrect</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="skippedQuestions">0</div>
+                        <div class="stat-label">Skipped</div>
+                    </div>
+                </div>
+                
+                <div class="results-actions">
+                    <button class="btn btn-primary" id="reviewBtn">
+                        <i class="fas fa-list-ol"></i> Review Answers
+                    </button>
+                    <button class="btn btn-primary" id="newTestBtn">
+                        <i class="fas fa-redo"></i> New Test
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3"></audio>
+    <audio id="wrongSound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+    <audio id="completeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"></audio>
+
+    <script>
+       // ===== DOM Elements =====
+// Pages
+const pages = {
+    welcome: document.getElementById('welcomePage'),
+    config: document.getElementById('configPage'),
+    quiz: document.getElementById('quizPage'),
+    results: document.getElementById('resultsPage')
+};
+
+// Header
+const appHeader = document.getElementById('appHeader');
+const themeToggle = document.getElementById('themeToggle');
+
+// Buttons
+const startBtn = document.getElementById('startBtn');
+const beginTestBtn = document.getElementById('beginTestBtn');
+const skipBtn = document.getElementById('skipBtn');
+const nextBtn = document.getElementById('nextBtn');
+const reviewBtn = document.getElementById('reviewBtn');
+const newTestBtn = document.getElementById('newTestBtn');
+
+// Quiz Elements
+const questionText = document.getElementById('questionText');
+const optionsGrid = document.getElementById('optionsGrid');
+const currentQuestionCount = document.getElementById('currentQuestionCount');
+const totalQuestions = document.getElementById('totalQuestions');
+const currentScore = document.getElementById('currentScore');
+const timeRemaining = document.getElementById('timeRemaining');
+const timer = document.getElementById('timer');
+
+// Results Elements
+const finalScore = document.getElementById('finalScore');
+const maxScore = document.getElementById('maxScore');
+const meterFill = document.getElementById('meterFill');
+const performanceText = document.getElementById('performanceText');
+const correctAnswersEl = document.getElementById('correctAnswers');
+const incorrectAnswersEl = document.getElementById('incorrectAnswers');
+const skippedQuestionsEl = document.getElementById('skippedQuestions');
+
+// Audio
+const correctSound = document.getElementById('correctSound');
+const wrongSound = document.getElementById('wrongSound');
+const completeSound = document.getElementById('completeSound');
+
+// ===== Quiz Variables =====
+let questions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let correctAnswers = 0;
+let incorrectAnswers = 0;
+let skippedQuestions = 0;
+let timerInterval;
+let timeLeft = 30;
+let selectedAnswer = null;
+let quizConfig = {};
+
+// ===== Initialize App =====
+init();
+
+function init() {
+    loadTheme();
+    setupEventListeners();
+    
+    // Hide header on welcome page
+    appHeader.style.display = 'none';
+}
+
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('i');
+    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function setupEventListeners() {
+    // Navigation
+    startBtn.addEventListener('click', () => navigateTo('config'));
+    beginTestBtn.addEventListener('click', startQuiz);
+    newTestBtn.addEventListener('click', () => navigateTo('config'));
+
+    // Quiz Controls
+    skipBtn.addEventListener('click', skipQuestion);
+    nextBtn.addEventListener('click', showNextQuestion);
+    reviewBtn.addEventListener('click', reviewAnswers);
+
+    // Theme Toggle
+    themeToggle.addEventListener('click', toggleTheme);
+
+    // Auto-submit when option is clicked
+    optionsGrid.addEventListener('click', (e) => {
+        if (e.target.classList.contains('option-btn')) {
+            selectAnswer(e.target);
+            submitAnswer();
+        }
+    });
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+// ===== Navigation Functions =====
+function navigateTo(pageName) {
+    // Hide all pages
+    Object.values(pages).forEach(page => {
+        page.classList.remove('active');
+    });
+
+    // Show requested page
+    pages[pageName].classList.add('active');
+
+    // Toggle header visibility
+    appHeader.style.display = pageName === 'welcome' ? 'none' : 'flex';
+
+    // Special actions for certain pages
+    if (pageName === 'quiz') {
+        loadQuestion();
+    } else if (pageName === 'results') {
+        showResults();
+    }
+}
+
+// ===== Quiz Functions =====
+async function startQuiz() {
+    // Get configuration from form
+    quizConfig = {
+        examType: document.getElementById('examType').value,
+        category: document.getElementById('category').value,
+        difficulty: document.getElementById('difficulty').value,
+        questionCount: parseInt(document.getElementById('questionCount').value),
+        timePerQuestion: parseInt(document.getElementById('timePerQuestion').value)
+    };
+
+    // Reset quiz variables
+    currentQuestionIndex = 0;
+    score = 0;
+    correctAnswers = 0;
+    incorrectAnswers = 0;
+    skippedQuestions = 0;
+
+    // Update UI
+    totalQuestions.textContent = quizConfig.questionCount;
+    currentScore.textContent = '0';
+
+    try {
+        beginTestBtn.disabled = true;
+        beginTestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Questions...';
+
+        // Load questions from API
+        await loadQuestions();
+
+        navigateTo('quiz');
+    } catch (error) {
+        console.error('Error loading questions:', error);
+        alert('Failed to load questions. Please try again.');
+    } finally {
+        beginTestBtn.disabled = false;
+        beginTestBtn.innerHTML = '<i class="fas fa-hourglass-start"></i> Start Test';
+    }
+}
+
+async function loadQuestions() {
+    // In a real app, you would fetch questions based on the exam type
+    const apiUrl = `https://opentdb.com/api.php?amount=${quizConfig.questionCount}&category=${quizConfig.category}&difficulty=${quizConfig.difficulty}&type=multiple`;
+
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    if (data.response_code === 0) {
+        questions = data.results;
+    } else {
+        throw new Error('Failed to load questions');
+    }
+}
+
+function loadQuestion() {
+    resetQuestionState();
+    const currentQuestion = questions[currentQuestionIndex];
+
+    // Update UI
+    currentQuestionCount.textContent = currentQuestionIndex + 1;
+    questionText.textContent = decodeHtmlEntities(currentQuestion.question);
+
+    // Combine and shuffle answers
+    const allAnswers = [
+        ...currentQuestion.incorrect_answers,
+        currentQuestion.correct_answer
+    ];
+    const shuffledAnswers = shuffleArray(allAnswers);
+
+    // Create answer buttons
+    optionsGrid.innerHTML = '';
+    shuffledAnswers.forEach(answer => {
+        const button = document.createElement('button');
+        button.className = 'option-btn';
+        button.textContent = decodeHtmlEntities(answer);
+        optionsGrid.appendChild(button);
+    });
+
+    // Start timer
+    startTimer();
+}
+
+function startTimer() {
+    timeLeft = quizConfig.timePerQuestion;
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            submitAnswer();
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    timeRemaining.textContent = timeLeft;
+
+    // Change timer color based on remaining time
+    if (timeLeft <= 5) {
+        timer.classList.remove('warning');
+        timer.classList.add('critical');
+    } else if (timeLeft <= quizConfig.timePerQuestion / 3) {
+        timer.classList.add('warning');
+        timer.classList.remove('critical');
+    } else {
+        timer.classList.remove('warning');
+        timer.classList.remove('critical');
+    }
+}
+
+function selectAnswer(selectedButton) {
+    // Deselect previous answer
+    optionsGrid.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+
+    // Select new answer
+    selectedButton.classList.add('selected');
+    selectedAnswer = selectedButton.textContent;
+}
+
+function submitAnswer() {
+    clearInterval(timerInterval);
+
+    const currentQuestion = questions[currentQuestionIndex];
+    const correctAnswer = decodeHtmlEntities(currentQuestion.correct_answer);
+
+    // If no answer selected (time ran out)
+    if (!selectedAnswer) {
+        skippedQuestions++;
+        showNextQuestion();
+        return;
+    }
+
+    // Check if answer is correct
+    const isCorrect = selectedAnswer === correctAnswer;
+
+    // Update score and stats
+    if (isCorrect) {
+        score += 10;
+        correctAnswers++;
+        currentScore.textContent = score;
+        correctSound.play();
+    } else {
+        incorrectAnswers++;
+        wrongSound.play();
+    }
+
+    // Disable all options
+    optionsGrid.querySelectorAll('.option-btn').forEach(btn => {
+        btn.disabled = true;
+
+        // Highlight correct/incorrect answers
+        if (btn.textContent === correctAnswer) {
+            btn.classList.add('correct');
+        } else if (btn.classList.contains('selected') && !isCorrect) {
+            btn.classList.add('incorrect');
+        }
+    });
+
+    // Show next button
+    nextBtn.style.display = 'inline-flex';
+}
+
+function skipQuestion() {
+    clearInterval(timerInterval);
+    skippedQuestions++;
+    showNextQuestion();
+}
+
+function showNextQuestion() {
+    currentQuestionIndex++;
+
+    if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+        nextBtn.style.display = 'none';
+    } else {
+        navigateTo('results');
+    }
+}
+
+function resetQuestionState() {
+    selectedAnswer = null;
+    clearInterval(timerInterval);
+    nextBtn.style.display = 'none';
+    timeLeft = quizConfig.timePerQuestion;
+    updateTimerDisplay();
+}
+
+// ===== Results Functions =====
+function showResults() {
+    completeSound.play();
+
+    // Calculate final score
+    const maxPossibleScore = questions.length * 10;
+    const percentage = (score / maxPossibleScore) * 100;
+
+    // Update UI
+    finalScore.textContent = score;
+    maxScore.textContent = maxPossibleScore;
+    correctAnswersEl.textContent = correctAnswers;
+    incorrectAnswersEl.textContent = incorrectAnswers;
+    skippedQuestionsEl.textContent = skippedQuestions;
+
+    // Animate performance meter
+    setTimeout(() => {
+        meterFill.style.width = `${percentage}%`;
+    }, 100);
+
+    // Set performance text
+    if (percentage >= 90) {
+        performanceText.textContent = "Outstanding! You're exam ready! 🎉";
+    } else if (percentage >= 70) {
+        performanceText.textContent = "Excellent performance! Keep it up! 👍";
+    } else if (percentage >= 50) {
+        performanceText.textContent = "Good attempt! Review your weak areas 📚";
+    } else {
+        performanceText.textContent = "Keep practicing! You'll improve! 💪";
+    }
+}
+
+function reviewAnswers() {
+    // In a full implementation, this would show all questions with correct answers
+    alert("Review mode would show all questions with your answers and explanations.");
+}
+
+// ===== Utility Functions =====
+function decodeHtmlEntities(text) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+    </script>
+</body>
+</html>
